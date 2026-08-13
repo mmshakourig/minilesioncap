@@ -1,0 +1,6 @@
+.venv
+.claude
+/data
+
+*.gz
+.env

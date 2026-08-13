@@ -1,0 +1,18 @@
+
+If you use this tool please cite: https://pubs.rsna.org/doi/10.1148/ryai.230024
+
+TotalSegmentator sends anonymous usage statistics. If you want to disable it check the documentation.
+Using 'fast' option: resampling to lower resolution (3mm)
+Downloading model for Task 297 ...
+Downloading:   0%|          | 0.00/135M [00:00<?, ?B/s]Downloading:   0%|          | 131k/135M [00:00<01:49, 1.23MB/s]Downloading:   3%|3         | 4.72M/135M [00:00<00:04, 26.7MB/s]Downloading:   9%|8         | 11.7M/135M [00:00<00:02, 44.9MB/s]Downloading:  14%|#3        | 18.9M/135M [00:00<00:02, 55.1MB/s]Downloading:  19%|#8        | 25.6M/135M [00:00<00:01, 59.1MB/s]Downloading:  24%|##3       | 32.2M/135M [00:00<00:01, 61.6MB/s]Downloading:  29%|##8       | 39.1M/135M [00:00<00:01, 63.3MB/s]Downloading:  34%|###4      | 46.3M/135M [00:00<00:01, 65.4MB/s]Downloading:  39%|###9      | 53.3M/135M [00:00<00:01, 66.6MB/s]Downloading:  44%|####4     | 60.0M/135M [00:01<00:01, 63.7MB/s]Downloading:  49%|####9     | 66.6M/135M [00:01<00:01, 64.1MB/s]Downloading:  54%|#####4    | 73.1M/135M [00:01<00:01, 60.6MB/s]Downloading:  59%|#####8    | 79.3M/135M [00:01<00:00, 59.3MB/s]Downloading:  63%|######3   | 85.5M/135M [00:01<00:00, 59.5MB/s]Downloading:  68%|######8   | 92.7M/135M [00:01<00:00, 63.1MB/s]Downloading:  73%|#######3  | 99.5M/135M [00:01<00:00, 64.4MB/s]Downloading:  79%|#######8  | 106M/135M [00:01<00:00, 65.8MB/s] Downloading:  84%|########3 | 113M/135M [00:01<00:00, 65.6MB/s]Downloading:  89%|########8 | 120M/135M [00:01<00:00, 67.4MB/s]Downloading:  94%|#########4| 127M/135M [00:02<00:00, 59.8MB/s]Downloading: 100%|##########| 135M/135M [00:02<00:00, 60.9MB/s]
+  0%|          | 0/20 [00:00<?, ?it/s]  5%|5         | 1/20 [00:07<02:13,  7.04s/it] 10%|#         | 2/20 [00:12<01:50,  6.13s/it] 15%|#5        | 3/20 [00:17<01:35,  5.63s/it] 20%|##        | 4/20 [00:22<01:24,  5.26s/it] 25%|##5       | 5/20 [00:26<01:15,  5.03s/it] 30%|###       | 6/20 [00:31<01:08,  4.86s/it] 35%|###5      | 7/20 [00:35<01:01,  4.73s/it] 40%|####      | 8/20 [00:40<00:57,  4.75s/it] 45%|####5     | 9/20 [00:47<00:58,  5.32s/it] 50%|#####     | 10/20 [00:53<00:57,  5.72s/it] 55%|#####5    | 11/20 [01:00<00:52,  5.88s/it] 60%|######    | 12/20 [01:05<00:46,  5.78s/it] 65%|######5   | 13/20 [01:10<00:38,  5.55s/it] 70%|#######   | 14/20 [01:14<00:30,  5.08s/it] 75%|#######5  | 15/20 [01:18<00:23,  4.69s/it] 80%|########  | 16/20 [01:22<00:17,  4.38s/it] 85%|########5 | 17/20 [01:25<00:12,  4.18s/it] 90%|######### | 18/20 [01:30<00:08,  4.18s/it] 95%|#########5| 19/20 [01:35<00:04,  4.46s/it]100%|##########| 20/20 [01:40<00:00,  4.79s/it]100%|##########| 20/20 [01:40<00:00,  5.03s/it]
+Collecting results:   0%|          | 0/1 [00:00<?, ?it/s]Collecting results: 100%|##########| 1/1 [00:15<00:00, 15.41s/it]Collecting results: 100%|##########| 1/1 [00:15<00:00, 15.41s/it]
+Download finished. Extracting...
+Resampling...
+  Resampled in 7.73s
+Predicting...
+  Predicted in 142.06s
+Resampling...
+  Resampled in 1.88s
+Saving segmentations...
+  Saved in 1.53s
