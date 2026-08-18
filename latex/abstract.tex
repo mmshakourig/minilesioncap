@@ -1,0 +1,36 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+
+\begin{document}
+
+\begin{center}
+{\Large \bfseries Automated Anatomy-Grounded Lesion Captioning for Whole-Body \\ PSMA PET/CT Using Large Language Models}
+
+\vspace{8pt}
+{\large Mahdi Shakouri$^{1,2}$}
+
+\vspace{4pt}
+{\normalsize $^{1}$University of British Columbia, Vancouver, BC, Canada \\
+$^{2}$BC Cancer, Vancouver, BC, Canada}
+\end{center}
+
+\vspace{10pt}
+{\bfseries \large Abstract for Technical Review}
+
+Manual lesion-level annotation of whole-body $^{68}$Ga/$^{18}$F-PSMA PET/CT studies is labor-intensive and represents a bottleneck for curating datasets to train and evaluate vision-language models in nuclear medicine. We present an end-to-end, five-stage pipeline that converts free-text PSMA PET/CT reports and voxel-level lesion segmentations into automatically generated, anatomically grounded, lesion-level captions, together with a multi-metric evaluation framework. Structured SUVmax mentions were first extracted from 286 clinical reports (598 mentions across four organ-system sections). Lesion masks were labeled via 26-connectivity connected-component analysis, and per-lesion SUVmax, three-dimensional centroid, metabolic tumor volume (MTV), and bounding-box dimensions were computed from co-registered PET volumes. Because absolute SUVmax values in the anonymized PET data diverged systematically (patient-specific scale drift, median $\sim$4.3$\times$) from the values in the original report text, report-to-lesion correspondence was established via rank-order matching of SUVmax values within each patient rather than absolute-value thresholding, exploiting well-preserved rank concordance. Whole-body CT volumes were segmented into 117 anatomical structures using TotalSegmentator, and for each lesion the three nearest anatomical structures were identified via nearest-neighbor search in world coordinates. A structured prompt encoding lesion centroid, SUVmax, MTV, dimensions, and the three nearest anatomic structures (with distances and centroids) was submitted to a large language model role-framed as a nuclear medicine physician, producing free-text lesion descriptions. Generated captions were evaluated against ground-truth report text using BARTScore, BERTScore, RaTEScore, and GREEN. In an interim analysis of 384 lesions (from 232 of 286 patients with completed CT segmentation), the pipeline achieved a 79.9\% report-to-lesion correspondence rate and produced captions with a mean BERTScore F1 of 0.872 and RaTEScore of 0.481 against ground-truth report text. This work demonstrates a scalable, reproducible approach to lesion-level caption generation that avoids direct image-token LLM input by grounding generation in structured, automatically derived anatomic and quantitative features.
+
+{\bfseries Keywords:} PSMA PET/CT, prostate cancer, nuclear medicine, lesion captioning, large language models, radiology report generation, automated anatomic segmentation, natural language generation evaluation, multimodal AI, structured reporting
+
+\vspace{6pt}
+{\bfseries \large Summary for Program}
+
+We built an automated pipeline that reads PSMA PET/CT lesion data and anatomical context to generate free-text radiology-style descriptions of individual tumor lesions using a large language model, then scored the generated text against the original clinical reports using multiple automated language-quality metrics.
+
+\end{document}
