@@ -20,88 +20,152 @@
 {\Large \bfseries Automated Anatomy-Grounded Lesion Captioning for Whole-Body \\ PSMA PET/CT Using Large Language Models}
 
 \vspace{6pt}
-{\normalsize Mahdi Shakouri$^{1,2}$}
+{\normalsize M Mahdi Shakouri, Mahan Pouromidi, Rezvan Samimi, Elinaz Hosseinzadeh, Ghasemali Divband, Zohreh Adinehpour, Carlos Uribe, Arman Rahmim, Fereshteh Yousefirizi}
 
-\vspace{2pt}
-{\small $^{1}$University of British Columbia, Vancouver, BC, Canada \quad
-$^{2}$BC Cancer, Vancouver, BC, Canada}
+% \vspace{2pt}
+% {\small $^{1}$University of British Columbia, Vancouver, BC, Canada \quad
+% $^{2}$BC Cancer, Vancouver, BC, Canada}
 \end{center}
 
 \vspace{4pt}
 \section*{Purpose}
-Whole-body $^{68}$Ga/$^{18}$F-PSMA PET/CT is central to staging and restaging prostate cancer, yet clinical reports describe findings at the organ-system level (e.g., ``lymph nodes,'' ``skeleton'') rather than per-lesion, and per-lesion annotation is rarely performed outside of dedicated research review. This gap limits the availability of paired image-text data needed to train and evaluate lesion-level vision-language models for nuclear medicine. We developed and evaluated an automated pipeline that (1) establishes correspondence between free-text report findings and individually segmented PET lesions, (2) grounds each lesion in its automatically segmented CT anatomic context, (3) generates a free-text, radiology-style caption for each lesion using a large language model (LLM), and (4) evaluates the generated captions against ground-truth report text using complementary automated natural-language-generation (NLG) metrics.
+Whole-body PET/CT is central to staging and restaging many cancers, yet clinical reports describe findings at the organ-system level (e.g., "lymph nodes", "skeleton"), and per-lesion annotation is rarely performed in prostate cancer. This gap limits the availability of paired image-text data needed to train and evaluate lesion-level vision-language models for nuclear medicine. Recent work has begun to close this gap by curating large lesion-level PET/CT training dedicated to mask-aware vision-language models on them1.
 
-\section*{Methods}
+This work develops and evaluates an automated pipeline for generating anatomically grounded lesion captions in whole-body PSMA PET/CT using large language models. We developed and evaluated an automated pipeline that (1) establishes correspondence between free-text report findings and individually segmented PET lesions, (2) grounds each lesion in its automatically segmented CT anatomic context, (3) generates a free-text, radiology-style caption for each lesion using a large language model (LLM), and (4) evaluates the generated captions against ground-truth report text using complementary automated natural-language-generation (NLG) metrics.
+
+\section*{Materials and Methods}
+\subsection*{Data}
+This single-center retrospective study drew on 320 men with histologically confirmed prostate cancer who underwent [$^{68}$Ga]Ga-PSMA-11 imaging. All participants provided written informed consent; the protocol was approved by the ethics committee and adhered to Good Clinical Practice and the Declaration of Helsinki. The cohort was reduced to 284 patients after excluding 36 cases due to missing image-mask pairs, absent reports, or incompatible masks. PET segmentations were performed by nuclear medicine specialists with expertise in PET imaging. Readers had full access to PET/CT reports during segmentation, resulting in non-blinded reference masks. 
+Manual lesion segmentation on PET/CT scans were performed by nuclear medicine specialists with expertise in PET imaging. Initially, two readers independently delineated a volume of interest (VOI) around the lesion. The resulting segmentations were then reviewed and refined by two additional readers, followed by a final verification by an experienced nuclear medicine physician. This multi-stage review process minimized inter-observer variability and established high-quality ground truth labels for model training and evaluation. Readers had access to the PET/CT report during manual segmentation, consistent with routine best practice.
+
+
+
+\subsection*{Methods}
 The pipeline comprises five stages, applied to a cohort of paired whole-body PET and CT volumes with corresponding lesion segmentation masks and structured clinical reports.
 
-\textbf{1. Report parsing.} Free-text reports were parsed into four fixed organ-system sections (prostatic fossa, lymph nodes, skeleton, viscera). Every SUVmax mention within each section was extracted, yielding one record per (patient, section, SUVmax) triplet.
 
-\textbf{2. Lesion extraction and report correspondence.} Binary lesion masks were labeled using 26-connectivity connected-component analysis on the co-registered PET volume. For each resulting candidate lesion, SUVmax, three-dimensional centroid (world coordinates), metabolic tumor volume (MTV), axial slice index, and bounding-box dimensions were computed. Because absolute SUVmax in the anonymized/resampled PET export diverged from the value cited in the original report by a patient-specific, non-constant scale factor (median ratio $\approx$4.3, observed range 1.08--85), correspondence between report mentions and segmented lesions was established by rank order: SUVmax values from the report and from the candidate lesions were each sorted in descending order within a patient and paired positionally, rather than matched by absolute-value proximity.
 
-\textbf{3. Anatomic localization.} Each patient's CT volume was segmented into 117 anatomical structures using TotalSegmentator (GPU-accelerated, fast-resolution inference). For every lesion, the three anatomically nearest structures were identified via nearest-neighbor search (k-d tree, world-coordinate mm) from the lesion centroid to each structure's voxel point cloud, recording structure identity, distance, and structure centroid.
+\textbf{1. Report parsing:}
+Free-text reports were parsed into four fixed organ-system sections (prostatic fossa, lymph nodes, skeleton, viscera). Sentences describing positive findings in PET/CT reports with mentions of standardized uptake values (SUVmax) were identified to form a ground-truth dataset of lesion-level captions. Every sentence with a SUVmax mention within each section was extracted, yielding one record per (patient, section, SUVmax) triplet.
 
-\textbf{4. Caption generation.} For each lesion, a structured text prompt encoding the lesion's centroid, SUVmax, MTV, dimensions, and its three nearest anatomic structures (names, distances, centroids) was submitted to an LLM (Gemini) with a system instruction role-framing it as a nuclear medicine physician dictating findings, generating a concise free-text lesion description without direct image input.
+\textbf{2. Lesion extraction and report correspondence:} 
+Lesion masks were decomposed into individual lesion instances by 26-connectivity connected-component analysis, and per-lesion quantitative features were then extracted from the PET volume. For each candidate lesion, SUVmax values from the report and from the candidate lesions were each sorted in descending order within a patient and paired positionally, rather than matched by absolute-value proximity.
+\begin{equation}
+  \text{Match}(L_{i}) = \underset{j}{\arg\min} \left| \ \text{Rank}(SUVmax_{report,j}) - \text{Rank}(SUVmax_{lesion,i}) \ \right|
+\end{equation}
 
-\textbf{5. Automated evaluation.} Generated captions were compared against the corresponding ground-truth report section text using four metrics spanning general-purpose and domain-specific NLG evaluation: BARTScore (generation-likelihood under a pretrained sequence-to-sequence model), BERTScore precision/recall/F1 (contextual embedding similarity), RaTEScore (radiological entity-level factuality), and GREEN (LLM-based identification of clinically significant errors).
+\textbf{3. Anatomic localization:} 
+CT volume for patient was segmented into 117 anatomical structures using TotalSegmentator (GPU-accelerated, fast-resolution inference)2. For every lesion, the three anatomically nearest structures were identified via nearest-neighbor search (k-d tree, world-coordinate mm) from the lesion centroid to each structure's voxel point cloud, recording structure identity, distance, and structure centroid.
+
+\textbf{4. Caption generation:} 
+A structured, standardized prompt encoding the lesion's centroid, slice number, SUVmax, MTV, dimensions, and its three nearest anatomic structures (names, distances, centroids) per lesion was submitted to an LLM (Gemini 3.6 Flash, 3.1 Pro) with a system instruction role-framing it as a nuclear medicine physician dictating findings, generating a lesion description without direct image input.
+
+
+\textbf{5. Automated evaluation:}
+To comprehensively evaluate our pipeline, generated captions were compared against the corresponding ground-truth report section text using four metrics spanning multiple categories of metrics and general-purpose and domain-specific NLG evaluation metrics widely used in prior works as follows:
+\begin{itemize}
+  % reduce spacing between items
+  \setlength\itemsep{0em}
+  \item \textbf{N-gram-based Metric}: BLEU-4, precision-based n-gram matching metric. 
+  \item \textbf{Semantic Metrics}: BERTScore and BARTScore, computed using checkpoints fine-tuned on large radiology corpora, to capture latent contextual similarity between predicted and reference reports.
+  \item \textbf{Model-based Metric}: RaTEScore, assesses clinical plausibility via radiology-specific language-model-based evaluation.
+\end{itemize}
+
+\section*{Results}
+The pipeline was applied to 284 patients with whole-body PSMA PET/CT scans and corresponding clinical reports. Table~\ref{tab:data-composition} summarizes the data composition at each processing step, including the number of patients, clinical reports, lesions with SUVmax mentions extracted, and lesions with established correspondences via rank matching.
 
 \begin{table}[h]
 \centering
-\caption{Data composition (placeholder -- to be finalized with the complete cohort).}
+\caption{Breakdown of data composition at each proccessing step.}
 \label{tab:data-composition}
-\begin{tabular}{lc}
+\begin{tabular}{lcc}
 \toprule
 Characteristic & Value \\
 \midrule
-Total patients (whole-body PSMA PET/CT) & [N = XXX] \\
-Total clinical reports & [N = XXX] \\
-Total SUVmax mentions extracted & [N = XXX] \\
-\quad Prostatic fossa & [N = XXX] \\
-\quad Lymph nodes & [N = XXX] \\
-\quad Skeleton & [N = XXX] \\
-\quad Viscera & [N = XXX] \\
-Patients with completed CT anatomic segmentation & [N = XXX / XXX] \\
-Report--lesion correspondences established (rank matching) & [N = XXX (XX.X\%)] \\
-Lesions with anatomic context and generated caption & [N = XXX] \\
+Total Patients (whole-body PSMA PET/CT) & 320 \\
+Clinical reports & 284 \\
+Lesions with SUVmax mention extracted & 598 \\
+Lesions with correspondences established (rank matching) & 384 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\section*{Results}
-In an interim analysis, the parsing stage identified 598 SUVmax mentions across 286 patient reports. Rank-based correspondence matched 478 of these mentions (79.9\%) to a segmented PET lesion; the residual unmatched mentions primarily reflect sections in which the report described more discrete findings than were captured as separate connected components in the lesion mask. CT anatomic segmentation was completed for 232 of 286 patients (81\%) at the time of this interim analysis, yielding 384 lesions with both a matched report SUVmax and automatically derived anatomic context. An LLM-generated caption was produced for all 384 eligible lesions (100\% generation success). Automated evaluation against ground-truth report text yielded a mean BARTScore of $-3.94 \pm 0.31$, BERTScore precision/recall/F1 of $0.868 \pm 0.012$ / $0.877 \pm 0.030$ / $0.872 \pm 0.020$, and RaTEScore of $0.481 \pm 0.083$. GREEN evaluation is in progress (Table~\ref{tab:eval-metrics}). Qualitatively, generated captions correctly localized lesions to their dominant anatomic structure (e.g., prostate, iliac lymph node chains, vertebral bodies) and consistently reported SUVmax and MTV in the requested radiology-style format (Figure~\ref{fig:sample-lesion}).
+\smallskip
+
+In an interim analysis of 384 lesions matched with corresponding lesion mentions in clinical reports from the cohort using rank-based correspondence, the pipeline produced captions with a mean BERTScore F1 of 0.872 and RaTEScore of 0.481 against ground-truth report text. Table~\ref{tab:eval-metrics} summarizes the evaluation metrics for two LLM variants. 
 
 \begin{table}[h]
 \centering
-\caption{Automatic caption-quality evaluation metrics (placeholder -- final cohort pending).}
-\label{tab:eval-metrics}
-\begin{tabular}{lccc}
+\begin{tabular}{lcccc}
 \toprule
-Metric & Mean & SD & N \\
+% reorder this table such that it goes by LLM Model | BERTScore (F1) | RaTEScore | BARTScore
+LLM Model & BLEU & BERTScore (F1) & BARTScore & RaTEScore \\
 \midrule
-BARTScore & $-3.94$ & $0.31$ & 384 \\
-BERTScore (Precision) & [X.XXX] & [X.XXX] & [XXX] \\
-BERTScore (Recall) & [X.XXX] & [X.XXX] & [XXX] \\
-BERTScore (F1) & [X.XXX] & [X.XXX] & [XXX] \\
-RaTEScore & [X.XXX] & [X.XXX] & [XXX] \\
-GREEN & [X.XXX] & [X.XXX] & [XXX] \\
+Gemini 3.6 Flash & 0.024 $\pm$ 0.016 & 0.872 $\pm$ 0.030 & -3.94 $\pm$ 0.31 & 0.481 $\pm$ 0.083 \\
+Gemini 3.1 Pro & 0.023 $\pm$ 0.014 & 0.870 $\pm$ 0.017  & -3.86 $\pm$ 0.32 & 0.491 $\pm$ 0.078 \\
 \bottomrule
 \end{tabular}
+\caption{Automatic caption quality evaluation metrics.}
+\label{tab:eval-metrics}
 \end{table}
+
+
+
+In figure~\ref{fig:sample-lesion}, we illustrate a representative lesion with its corresponding ground-truth report text and LLM-generated caption. As shown, the generated caption accurately describes the lesion's anatomical location, SUVmax value, and relevant anatomical context, demonstrating the pipeline's ability to produce clinically coherent lesion-level descriptions.
+
 
 \begin{figure}[ht]
 \centering
-\includegraphics[width=0.82\textwidth]{../figures/sample_lesion_3d.png}
-\caption{Representative lesion (prostatic fossa, patient 0001). \emph{Left:} 3D surface rendering of the segmented lesion (red) within the automatically segmented prostate (tan), reconstructed via marching cubes from the co-registered PET lesion mask and CT anatomic segmentation. \emph{Right:} corresponding ground-truth report text and the LLM-generated caption produced from the lesion's quantitative and anatomic features.}
+\includegraphics[width=0.82\textwidth]{image.png}
+\caption{Captions generated by each large language model and the ground-truth report finding for a representative lesion. Because our ground-truth captions do not include the standard descriptor of lesion's axial slice number, we omit the extracted slice number form our standardized prompt to the models.}
 \label{fig:sample-lesion}
 \end{figure}
 
-\section*{Conclusion}
-We demonstrate a fully automated pipeline that generates anatomically grounded, lesion-level free-text captions for whole-body PSMA PET/CT and evaluates them against clinical report text using complementary general-purpose and radiology-specific NLG metrics. The approach resolves a practical obstacle in cross-modal dataset construction -- systematic, patient-specific SUVmax scale drift between report text and anonymized/resampled imaging data -- via rank-based correspondence, and shows that anatomically explicit, structured prompting can produce clinically coherent lesion descriptions without direct image-token input to the LLM. Completion of CT segmentation and caption generation for the full cohort, along with GREEN scoring, is in progress and will be reported at the conference.
 
-\section*{Novel Aspects}
-\begin{itemize}
-\item \textbf{Rank-based cross-modal correspondence:} a practical solution to systematic, non-constant SUVmax calibration drift between free-text clinical reports and anonymized/resampled PET data, enabling reliable report-to-lesion matching without relying on fragile absolute-value thresholds.
-\item \textbf{Anatomy-grounded, image-free LLM prompting:} lesion captions are generated from structured, automatically derived quantitative and anatomic features (nearest-neighbor CT segmentation context) rather than raw image tokens, offering a token-efficient and interpretable alternative to end-to-end vision-language captioning.
-\item \textbf{Lesion-level, multi-metric automated evaluation:} combines general-purpose (BARTScore, BERTScore) and radiology-domain-specific (RaTEScore, GREEN) NLG metrics at the individual-lesion level, in contrast to most prior report-generation evaluation performed at the whole-study level.
-\end{itemize}
+\subsection*{Discussion}
+
+Our developed pipeline eliminates the need to train a vision-language model; it asks how far lesion-level captioning can be taken using explicit, measurable anatomic grounding together with a general-purpose language model. Three elements are new relative to recent mask-aware PET/CT reporting models. First, rank-order report-to-lesion correspondence matches lesions to their findings in PET reports. Second, anatomic grounding is explicit and auditable: each caption is conditioned on named structures drawn from a 117-structure CT parcellation with measured distances, so every anatomic assertion traces to a specific measurement rather than to a learned image token. The pipeline is specific to PSMA PET/CT in prostate cancer, where reporting conventions and patterns of spread differ from the FDG oncology cohorts used in prior work, and it is deployable at centers that lack the data or compute to train a 3D vision-language model.
+
+While the focus of this work was a cohort of prostate cancer 68Ga/18F-PSMA PET/CT scans, our pipeline of generating anatomy-aware per-lesion lesion captions has further potential in other cancers where lesion-level reporting is clinically relevant, such as lymphoma, melanoma, and neuroendocrine tumors. In the final conference manuscript, we aim to also evaluate the performance of the pipeline on an additional cohort of 18F-FDG PET/CT scans for primary mediastinal B-cell lymphoma patients newly acquired. The dataset of clinical reports we have used also lacks axial slice numbers in its lesion findings, which is a key descriptor in most standard radiology reports. With references to axial slice number for each lesion, the caption-to-lesion match can be made with absolute certainty as supposed to our rank-based approach. Furthermore, it is standard for PET/CT images to be cross. 
+
+Current work for a final conference manuscript is focused on completing the CT segmentation and caption generation for the full cohort, along with GREEN scoring, which will be reported at the conference. Future work will explore the use of specialized LLM models such as BiomedVLP and RadGraph to improve caption quality, as well as evaluating the pipeline on an additional cohort of 18F-FDG PET/CT scans for Mediastinal B cell lymphoma patients. Additionally, we plan to implement co-registration to a common reference space (e.g., MNI) for more robust anatomic localization of lesions and their corresponding captions.
+
+\section*{Conclusion}
+We demonstrate a fully automated pipeline that generates anatomically grounded, lesion-level free-text captions for whole-body PSMA PET/CT and evaluates them against clinical report text using complementary general-purpose and radiology-specific NLG metrics. The approach resolves a practical obstacle in cross-modal dataset via rank-based correspondence, and shows that anatomically explicit, structured prompting can produce clinically coherent lesion descriptions without direct image-token input to an LLM. Compared to existing end-to-end mask-aware vision-language models for lesion captioning, our proposed pipeline requires no model training.
+
+\section*{Acknowledgements}
+This work was supported by the BC Cancer foundation, the Natural Sciences and Engineering Research Council of Canada (NSERC) Discovery Horizons Grant DH-2025-00119, and the Canadian Institutes of Health Research (CIHR) Project Grant PJT-180251. Computational resources and services were provided by Microsoft for Health. Arman Rahmim and Carlos The rest of the authors declare no competing financial interests.
+
+
+
+\section*{REFERENCES}
+
+\begin{thebibliography}{1}
+
+\bibitem{ref1}
+\label{ref:petar}
+Maqbool, D., Lee, C., Huemann, Z., Church, S. D., Larson, M. E., Perlman, S. B., Romero, T. A., Warner, J. D., Lubner, M., Tie, X., Merkow, J., Hu, J., Cho, S. Y. and Bradshaw, T. J., “PETAR: Localized findings generation with mask-aware vision-language modeling for PET automated reporting,” arXiv [cs.CV] (2025).
+
+\bibitem{ref2}
+\label{ref:total}
+Hofmanninger, J., Prayer, F., Pan, J., Röhrich, S., Prosch, H., Langs, G. and Krenn, M., “Automatic lung and organ segmentation in chest CT using total segmentator,” Sci Rep 12, 1-12 (2022).
+
+\bibitem{bert}
+\label{ref:bert}
+[3] 	Zhang, T., Kishore, V., Wu, F., Weinberger, K. Q. and Artzi, Y., “BERTScore: Evaluating Text Generation with BERT,” arXiv [cs.CL] (2019).
+
+\bibitem{bartscore}
+\label{ref:bartscore}
+Yuan, W., Neubig, G. and Liu, P., “BARTScore: Evaluating generated text as text generation,” arXiv [cs.CL] (2021).
+
+\bibitem{rab}
+\label{ref:rab}
+Zhao, W., Wu, C., Zhang, X., Zhang, Y., Wang, Y. and Xie, W., “RaTEScore: A metric for radiology report generation,” arXiv [cs.CL] (2024).
+
+
+\end{thebibliography}
+
+
 
 \end{document}
+  
