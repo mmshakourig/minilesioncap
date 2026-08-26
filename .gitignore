@@ -4,3 +4,8 @@
 
 *.gz
 .env
+
+
+__pycache__/
+
+psma/
